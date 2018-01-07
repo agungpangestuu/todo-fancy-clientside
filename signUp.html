@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha256-eZrrJcwDc/3uDhsdt61sL2oOBY362qM3lon1gyExkL0=" crossorigin="anonymous" />
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,700" rel="stylesheet">
+  <!-- Bulma Version 0.6.0 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.6.0/css/bulma.min.css" integrity="sha256-HEtF7HLJZSC3Le1HcsWbz1hDYFPZCqDhZa9QsCgVUdw=" crossorigin="anonymous" />
+  <link rel="stylesheet" type="text/css" href="./assets/css/styleLogin.css">
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <script src="./assets/js/fblogin.js"></script>
+</head>
+<body>
+  <div id='sign'>
+    <section class="hero is-success is-fullheight">
+      <div class="hero-body">
+        <div class="container has-text-centered">
+          <div class="column is-4 is-offset-4">
+            <h3 class="title has-text-grey">Login</h3>
+            <p class="subtitle has-text-grey">Please login to proceed.</p>
+            <div class="box">
+              <figure class="avatar">
+                <img :src="picture" alt="" v-if='picture && picture.length > 0' style="width:120px; height: 120px;">
+                <img src="https://placehold.it/128x128" v-else='picture && picture.length == 0'>
+              </figure>
+              <form>
+                <a class="button is-block is-info is-large" id='fblogin' @click='login'>Login with Facebook</a>  
+              </form>
+            </div>
+            <p class="has-text-grey">
+              <a href="../">Need Help?</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</body>
+<!-- Buefy JavaScript -->
+
+<script src="https://unpkg.com/vue"></script>
+<script>
+  new Vue ({
+    el:'#sign',
+    data: {
+      picture: ''
+    },
+    methods: {
+      login: function(){
+        FB.login(function(response){
+          console.log(response)
+          axios.post('http://35.197.134.9:3001/signin',response)
+          .then((result)=>{
+            console.log(result.data);
+            if(!result.data.status){
+              console.log("Something went wrong!");
+              setTimeout(function(){
+                window.location.reload();
+              },5000);
+            }
+            else {
+              localStorage.setItem('id', result.data.id)
+              localStorage.setItem("token",result.data.token);
+              localStorage.setItem('picture', result.data.picture)
+              localStorage.setItem('name', result.data.name)
+              window.location = 'http://todo-fancy.pangestu.tech'
+            }
+          })
+        }, {scope:"public_profile,email"});   
+      }
+    },
+    created: function(){
+      if (localStorage.getItem ('token') && localStorage.getItem('token') != undefined){
+        window.location = '../'
+      }
+      else {
+        this.picture = localStorage.getItem('picture')
+      }
+    }
+  })
+</script>
+</html>
