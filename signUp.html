@@ -27,7 +27,7 @@
                 <img src="https://placehold.it/128x128" v-else='picture && picture.length == 0'>
               </figure>
               <form>
-                <a class="button is-block is-info is-large" id='fblogin' @click='login'>Login with Facebook</a>  
+                <a class="button is-block is-info is-large" id='fblogin' @click='login'>Login with Facebook</a>
               </form>
             </div>
             <p class="has-text-grey">
@@ -66,10 +66,10 @@
               localStorage.setItem("token",result.data.token);
               localStorage.setItem('picture', result.data.picture)
               localStorage.setItem('name', result.data.name)
-              window.location = 'http://todo-fancy.pangestu.tech'
+              window.location = '/'
             }
           })
-        }, {scope:"public_profile,email"});   
+        }, {scope:"public_profile,email"});
       }
     },
     created: function(){
