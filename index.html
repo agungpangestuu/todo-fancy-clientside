@@ -84,7 +84,31 @@
                           <a class="link is-info"  @click='completedTask(task._id)'>Complete</a>
                         </p>
                         <p class="level-item has-text-centered">
-                          <a class="link is-info">Edit</a>
+                          <a class="link is-info" @click="addClass(task)">Edit</a>
+                          <div :class="modal">
+                            <div class="modal-background"></div>
+                            <div class="modal-card">
+                              <header class="modal-card-head">
+                                <p class="modal-card-title">Modal title</p>
+                                <button class="delete" aria-label="close" @click="removeClass()"></button>
+                              </header>
+                              <section class="modal-card-body">
+                                <div class="">
+                                  <div class="field" style="margin-top: 20px">
+                                      <div class="control is-expanded">
+                                        <input class="input" type="text" v-model="editTask.task" placeholder="Task Name">
+                                        <textarea class="textarea" v-model="editTask.description" placeholder="Descriptions"></textarea>
+
+                                  </div>
+                                  </div>
+                                </div>
+                              </section>
+                              <footer class="modal-card-foot">
+                                <button class="button is-success" @click="updateData(editTask._id)">Save changes</button>
+                                <button class="button" @click="removeClass()">Cancel</button>
+                              </footer>
+                            </div>
+                          </div>
                         </p>
                         <p class="level-item has-text-centered">
                           <a class="link is-info" @click='deleteTask(task._id, task.status)'>Delete</a>
@@ -118,20 +142,28 @@
                         <a class="link is-info" @click='uncompleteTask(task._id)'>Uncomplete</a>
                       </p>
                       <p class="level-item has-text-centered">
-                        <a class="link is-info">Edit</a>
-                        <div class="modal">
+                        <a class="link is-info" @click="addClass(task)">Edit</a>
+                        <div :class="modal">
                           <div class="modal-background"></div>
                           <div class="modal-card">
                             <header class="modal-card-head">
                               <p class="modal-card-title">Modal title</p>
-                              <button class="delete" aria-label="close"></button>
+                              <button class="delete" aria-label="close" @click="removeClass()"></button>
                             </header>
                             <section class="modal-card-body">
-                              <!-- Content ... -->
+                              <div class="">
+                                <div class="field" style="margin-top: 20px">
+                                    <div class="control is-expanded">
+                                      <input class="input" type="text" v-model="editTask.task" placeholder="Task Name">
+                                      <textarea class="textarea" v-model="editTask.description" placeholder="Descriptions"></textarea>
+
+                                </div>
+                                </div>
+                              </div>
                             </section>
                             <footer class="modal-card-foot">
-                              <button class="button is-success">Save changes</button>
-                              <button class="button">Cancel</button>
+                              <button class="button is-success" @click="updateData(editTask._id)">Save changes</button>
+                              <button class="button" @click="removeClass()">Cancel</button>
                             </footer>
                           </div>
                         </div>
@@ -147,15 +179,12 @@
         </div>
       </div>
     </div>
+
   <!-- Main container -->
 </body>
 <script src="https://use.fontawesome.com/65915c81b2.js"></script>
 <script>
-  let http = axios.create({
-    baseURL: 'http://35.197.134.9:3001/',
-    headers: {'token' : localStorage.getItem('token')}
-  })
-  new Vue({
+ new Vue({
     el: '#home',
     data:{
       tasks : [],
@@ -163,7 +192,10 @@
       name: '',
       picture: '',
       newTask: {task : '', description: ''},
-      classObject: 'is-active'
+      classObject: 'is-active',
+      token: '',
+      modal: 'modal',
+      editTask: '',
     },
     methods: {
       logout : function(){
@@ -172,8 +204,9 @@
         window.location= 'http://todo-fancy.pangestu.tech/signUp.html'
       },
       createTask: function(){
-        http.post('api/create-task', this.newTask)
+        axios.post('http://35.197.134.9:3001/api/create-task', this.newTask, {headers: {'token' : localStorage.getItem('token')}})
         .then(({data}) => {
+          console.log(data);
           this.newTask =  {task : '', description: ''}
           this.tasks.unshift(data.data)
         })
@@ -190,7 +223,7 @@
         this.taskComplete.unshift(array[0])
         this.tasks.splice(index, 1)
 
-        http.put(`api/mark-task/${id}`,{'status': true})
+        axios.put(`http://35.197.134.9:3001/api/mark-task/${id}`,{'status': true}, {headers: {'token' : localStorage.getItem('token')}})
         .then(({data}) => {
          console.log(data)
         })
@@ -207,7 +240,7 @@
         this.tasks.unshift(array[0])
         this.taskComplete.splice(index, 1)
 
-        http.put(`api/mark-task/${id}`,{'status': false})
+        axios.put(`http://35.197.134.9:3001/api/mark-task/${id}`,{'status': false}, {headers: {'token' : localStorage.getItem('token')}})
         .then(({data}) => {
           console.log(data)
         })
@@ -234,26 +267,42 @@
           this.tasks.splice(index, 1)
           index = 0
         }
-        http.delete(`api/delete-task/${id}`)
+        axios.delete(`http://35.197.134.9:3001/api/delete-task/${id}`, {headers: {'token' : localStorage.getItem('token')}})
         .then(({data}) => {
           console.log('sukses')
         })
         .catch(err => console.log(err))
+      },
+      updateData (id) {
+        axios.put(`http://35.197.134.9:3001/api/edit-task/${id}`, this.editTask, {headers: {'token' : localStorage.getItem('token')}})
+        .then(({data}) => {
+          this.tasks.forEach(task => {
+            if(task._id == id){
+              task = data.data
+            }
+          })
+        })
+      },
+      addClass (task) {
+        this.modal = 'modal is-active'
+        this.editTask = task
+
+      },
+      removeClass () {
+        this.modal = 'modal'
       }
     },
     created: function (){
       this.picture = localStorage.getItem('picture')
       this.name = localStorage.getItem('name')
-      if(!localStorage.token){
-        window.location = 'http://todo-fancy.pangestu.tech/signUp.html'
-      }
-      else{
-        http.get('api/get-all-user_task')
+
+      if(localStorage.getItem('token') && localStorage.getItem('token') != undefined){
+        axios.get('http://35.197.134.9:3001/api/get-all-user_task', {headers: {'token' : localStorage.getItem('token')}})
         .then( ({data}) => {
+           console.log(data)
           data.data.forEach(data => {
             if(data.status == true) {
               this.taskComplete.push(data)
-
             }
             else {
               this.tasks.push(data)
@@ -261,6 +310,9 @@
           })
         })
         .catch(err => console.error(err))
+      }
+      else {
+        window.location = 'http://todo-fancy.pangestu.tech/signUp.html'
       }
     }
   })
