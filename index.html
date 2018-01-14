@@ -204,7 +204,7 @@
       logout : function(){
         localStorage.removeItem('token')
         localStorage.removeItem('id')
-        window.location= 'http://localhost:8080/signUp.html'
+        window.location= 'http://todo-fancy.pangestu.tech/signUp.html'
       },
       createTask: function(){
         axios.post('http://35.197.134.9:3001/api/create-task', this.newTask, {headers: {'token' : localStorage.getItem('token')}})
@@ -311,7 +311,7 @@
           .catch(err => console.error(err))
         }
         else {
-          window.location = 'http://localhost:8080/signUp.html'
+          window.location = 'http://todo-fancy.pangestu.tech/signUp.html'
         }
       }
     },
