@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -51,6 +52,7 @@
               <div class="control is-expanded">
                 <input class="input" type="text" v-model="newTask.task" placeholder="Task Name">
                 <textarea class="textarea" v-model= 'newTask.description' placeholder="Descriptions"></textarea>
+                <input class="input" type="date" v-model="newTask.dueDate" placeholder="Task Name">
             <div class="control">
               <input type="reset" class="button is-info" @click='createTask()' value='Create'>
             </div>
@@ -73,7 +75,7 @@
               <div class="media-content">
                 <div class="content">
                   <p>
-                    <strong>{{task.task}}</strong> <small>@johnsmith</small> <small>31m</small>
+                    <strong>{{task.task}}</strong> <small>{{name}}</small> <small>31m</small>
                     <br>
                       {{task.description}}
                   </p>
@@ -131,7 +133,7 @@
                 <div class="media-content">
                   <div class="content">
                     <p>
-                      <strong>{{task.task}}</strong> <small>@johnsmith</small> <small>31m</small>
+                      <strong>{{task.task}}</strong> <small>{{name}}</small> <small>31m</small>
                       <br>
                       {{task.description}}
                     </p>
@@ -188,10 +190,11 @@
     el: '#home',
     data:{
       tasks : [],
+      dataTask: [],
       taskComplete: [],
       name: '',
       picture: '',
-      newTask: {task : '', description: ''},
+      newTask: {task : '', description: '', dueDate: ''},
       classObject: 'is-active',
       token: '',
       modal: 'modal',
@@ -201,13 +204,13 @@
       logout : function(){
         localStorage.removeItem('token')
         localStorage.removeItem('id')
-        window.location= 'http://todo-fancy.pangestu.tech/signUp.html'
+        window.location= 'http://localhost:8080/signUp.html'
       },
       createTask: function(){
         axios.post('http://35.197.134.9:3001/api/create-task', this.newTask, {headers: {'token' : localStorage.getItem('token')}})
         .then(({data}) => {
           console.log(data);
-          this.newTask =  {task : '', description: ''}
+          this.newTask =  {task : '', description: '', dueDate: ''}
           this.tasks.unshift(data.data)
         })
         .catch(err => console.error(err))
@@ -222,7 +225,6 @@
           });
         this.taskComplete.unshift(array[0])
         this.tasks.splice(index, 1)
-
         axios.put(`http://35.197.134.9:3001/api/mark-task/${id}`,{'status': true}, {headers: {'token' : localStorage.getItem('token')}})
         .then(({data}) => {
          console.log(data)
@@ -239,7 +241,6 @@
           });
         this.tasks.unshift(array[0])
         this.taskComplete.splice(index, 1)
-
         axios.put(`http://35.197.134.9:3001/api/mark-task/${id}`,{'status': false}, {headers: {'token' : localStorage.getItem('token')}})
         .then(({data}) => {
           console.log(data)
@@ -276,6 +277,7 @@
       updateData (id) {
         axios.put(`http://35.197.134.9:3001/api/edit-task/${id}`, this.editTask, {headers: {'token' : localStorage.getItem('token')}})
         .then(({data}) => {
+          this.removeClass()
           this.tasks.forEach(task => {
             if(task._id == id){
               task = data.data
@@ -286,34 +288,36 @@
       addClass (task) {
         this.modal = 'modal is-active'
         this.editTask = task
-
       },
       removeClass () {
         this.modal = 'modal'
+      },
+      getData () {
+        this.picture = localStorage.getItem('picture')
+        this.name = localStorage.getItem('name')
+        if(localStorage.getItem('token') && localStorage.getItem('token') != undefined){
+          axios.get('http://35.197.134.9:3001/api/get-all-user_task', {headers: {'token' : localStorage.getItem('token')}})
+          .then( ({data}) => {
+            //  console.log(data)
+            data.data.forEach(data => {
+              if(data.status == true) {
+                this.taskComplete.push(data)
+              }
+              else {
+                this.tasks.push(data)
+              }
+            })
+          })
+          .catch(err => console.error(err))
+        }
+        else {
+          window.location = 'http://localhost:8080/signUp.html'
+        }
       }
     },
     created: function (){
-      this.picture = localStorage.getItem('picture')
+      this.getData()
       this.name = localStorage.getItem('name')
-
-      if(localStorage.getItem('token') && localStorage.getItem('token') != undefined){
-        axios.get('http://35.197.134.9:3001/api/get-all-user_task', {headers: {'token' : localStorage.getItem('token')}})
-        .then( ({data}) => {
-           console.log(data)
-          data.data.forEach(data => {
-            if(data.status == true) {
-              this.taskComplete.push(data)
-            }
-            else {
-              this.tasks.push(data)
-            }
-          })
-        })
-        .catch(err => console.error(err))
-      }
-      else {
-        window.location = 'http://todo-fancy.pangestu.tech/signUp.html'
-      }
     }
   })
 </script>
